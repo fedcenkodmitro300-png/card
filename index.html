@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Для тебя</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#12142a; --dusk:#2b2150; --rose:#f2b5c4; --gold:#f6dcae; --ink:#f6f0f8;
+    --script:"Marck Script","Segoe Script",cursive; --serif:"Lora",Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(ellipse at 50% 110%,var(--dusk) 0%,var(--night) 65%);
+    color:var(--ink);font-family:var(--serif);line-height:1.7;overflow-x:hidden;
+  }
+  canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+  main{position:relative;z-index:1;min-height:100svh;display:grid;place-items:center;padding:2rem 1.25rem}
+
+  .intro{text-align:center;transition:opacity .8s ease,transform .8s ease}
+  .intro.gone{opacity:0;transform:scale(.9);pointer-events:none;position:absolute}
+  .intro p{font-family:var(--script);font-size:clamp(1.6rem,6vw,2.2rem);color:var(--gold);margin-bottom:1.5rem}
+  .star{
+    width:92px;height:92px;border-radius:50%;border:0;cursor:pointer;
+    background:radial-gradient(circle,#fff6e0 0%,var(--gold) 35%,rgba(246,220,174,0) 70%);
+    box-shadow:0 0 40px 10px rgba(246,220,174,.45);animation:pulse 2.6s ease-in-out infinite;
+  }
+  .star:focus-visible{outline:3px solid var(--rose);outline-offset:8px}
+  @keyframes pulse{50%{transform:scale(1.12);box-shadow:0 0 60px 18px rgba(246,220,174,.6)}}
+
+  .letter{max-width:34rem;text-align:left;display:none}
+  .letter.show{display:block}
+  .letter h1{font-family:var(--script);font-weight:400;font-size:clamp(2.4rem,9vw,3.8rem);line-height:1.15;color:var(--rose);margin-bottom:1.5rem}
+  .letter p{font-size:clamp(1.05rem,3.6vw,1.2rem);margin-bottom:1.1rem;opacity:0;transition:opacity 1.4s ease}
+  .letter p.in{opacity:1}
+  .sign{font-family:var(--script);font-size:1.9rem;color:var(--gold);margin-top:1.5rem}
+
+  @media (prefers-reduced-motion:reduce){
+    .star{animation:none}
+    .letter p,.intro{transition:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main>
+  <div class="intro" id="intro">
+    <p>Это тебе</p>
+    <button class="star" id="open" aria-label="Открыть открытку"></button>
+  </div>
+
+  <article class="letter" id="letter"></article>
+</main>
+
+<script>
+  // ===== Поменяй здесь имя, подпись и текст =====
+  const NAME = "Моё золотце";
+  const SIGN = "Твой ослик";
+  const LINES = [
+    "Ты не представляешь, как сильно я по тебе скучаю.",
+    "Я безумно сильно хочу к тебе.",
+    "Хочу обнять тебя, слышать твой голос рядом и просто помолчать вдвоём.",
+    "Я хочу прожить эту жизнь рядом с тобой.",
+    "Хочу умереть с тобой в один день."
+  ];
+  // ==============================================
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Звёздное небо
+  const cv = document.getElementById("sky"), cx = cv.getContext("2d");
+  let stars = [];
+  function resize(){
+    cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio;
+    stars = Array.from({length: Math.min(140, Math.floor(innerWidth/6))}, () => ({
+      x: Math.random()*cv.width, y: Math.random()*cv.height,
+      r: (Math.random()*1.4+.4)*devicePixelRatio, p: Math.random()*6.28
+    }));
+  }
+  function draw(t){
+    cx.clearRect(0,0,cv.width,cv.height);
+    for(const s of stars){
+      const a = reduce ? .7 : .35 + .5*Math.abs(Math.sin(t/1400 + s.p));
+      cx.fillStyle = `rgba(255,240,220,${a})`;
+      cx.beginPath(); cx.arc(s.x,s.y,s.r,0,6.28); cx.fill();
+    }
+    if(!reduce) requestAnimationFrame(draw);
+  }
+  addEventListener("resize", () => { resize(); if(reduce) draw(0); });
+  resize(); requestAnimationFrame(draw);
+
+  // Письмо
+  const letter = document.getElementById("letter");
+  letter.innerHTML = `<h1>${NAME},</h1>` + LINES.map(l => `<p>${l}</p>`).join("") + `<p class="sign">${SIGN}</p>`;
+
+  document.getElementById("open").addEventListener("click", () => {
+    document.getElementById("intro").classList.add("gone");
+    letter.classList.add("show");
+    letter.querySelectorAll("p").forEach((p,i) => setTimeout(() => p.classList.add("in"), reduce ? 0 : 700 + i*1400));
+  });
+</script>
+</body>
+</html>
